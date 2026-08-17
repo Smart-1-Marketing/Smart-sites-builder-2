@@ -43,6 +43,8 @@ function fallback(input,recipe,ranked){
   };
 }
 
+app.get("/health",(req,res)=>res.status(200).type("text/plain").send("ok"));
+
 app.get("/api/health",(req,res)=>{
   const s=getSimvolyConfig();
   res.json({ok:true,aiConfigured:!!ai,simvolyConfigured:!!(s.domain&&s.clientKey),simvolyDomain:s.domain||null});
@@ -105,4 +107,5 @@ app.post("/api/simvoly/create-site",async(req,res)=>{
   catch(e){ res.status(e.code==="SIMVOLY_NOT_CONFIGURED"?503:502).json({error:e.message,details:e.details||null}); }
 });
 
-app.listen(process.env.PORT||3000,()=>console.log("Smart 1 Sites Creator started"));
+const port = Number(process.env.PORT) || 3000;
+app.listen(port,"0.0.0.0",()=>console.log(`Smart 1 Sites Creator listening on 0.0.0.0:${port}`));

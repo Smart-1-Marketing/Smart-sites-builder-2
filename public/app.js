@@ -1,48 +1,16 @@
-const $=id=>document.getElementById(id);
-let current=null, selected=null;
-
-function key(){return `s1-template-history:${($("name").value||"anonymous").toLowerCase()}`}
-function history(){try{return JSON.parse(localStorage.getItem(key())||"[]")}catch{return[]}}
-function save(t,final=false){
-  if(!t)return; const h=history(); const i=h.findIndex(x=>Number(x.id)===Number(t.id));
-  if(final) h.forEach(x=>x.final=false);
-  const item={id:Number(t.id),name:t.name,thumb:t.thumb,previewUrl:t.previewUrl,viewedAt:new Date().toISOString(),final};
-  if(i>=0)h[i]={...h[i],...item}; else h.push(item);
-  localStorage.setItem(key(),JSON.stringify(h.slice(-12)));
-  renderHistory();
-}
-function renderHistory(){
-  const el=$("hist"); if(!el)return; const h=history();
-  el.innerHTML=h.length?h.map(x=>`<div class="hist ${x.final?"final":""}"><img src="${x.thumb||""}"><div><strong>${x.name}</strong><br>${x.final?"Final selection":"Viewed"}</div></div>`).join(""):`<p class="tiny">Templates you preview will appear here.</p>`;
-}
-function preview(t){save(t,false);$("mt").textContent=t.name;$("frame").src=t.previewUrl;$("modal").classList.remove("hidden")}
-function choose(t){selected=Number(t.id);save(t,true);document.querySelectorAll(".template").forEach(el=>el.classList.toggle("selected",Number(el.dataset.id)===selected))}
-$("close").onclick=()=>{$("modal").classList.add("hidden");$("frame").src="about:blank"}
-
-$("f").onsubmit=async e=>{
-  e.preventDefault(); $("out").innerHTML="<p class='lead'>Analyzing your live template catalog…</p>";
-  const body={businessName:$("name").value,websiteUrl:$("url").value,businessType:$("type").value,city:$("city").value,primaryGoal:$("goal").value,description:$("desc").value};
-  const r=await fetch("/api/site-plan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  const d=await r.json(); if(!r.ok){$("out").innerHTML=`<p>${d.error||"Error"}</p>`;return}
-  current=d; selected=Number(d.plan.selected_template_id);
-  const map=new Map((d.templates||[]).map(t=>[Number(t.id),t]));
-  $("out").innerHTML=`
-    <h2>${d.plan.business_name}</h2>
-    <p class="lead">${d.plan.rationale}</p>
-    <p><strong>Primary CTA:</strong> ${d.plan.primary_cta}</p>
-    <p><strong>Pages:</strong> ${d.plan.pages.join(" · ")}</p>
-    <h3>Best Matching Templates</h3>
-    <div class="templates">
-      ${(d.templates||[]).slice(0,6).map(t=>`<article class="template ${Number(t.id)===selected?"selected":""}" data-id="${t.id}">
-        <img src="${t.thumb||""}" alt="${t.name}">
-        <div class="tbody"><strong>${t.name}</strong><div class="tiny">${t.systemTemplate?"Simvoly template":"Smart 1 custom template"}</div>
-        <div class="actions"><button class="secondary" data-prev="${t.id}">Preview</button><button class="primary" data-pick="${t.id}">${Number(t.id)===selected?"Selected":"Choose"}</button></div></div>
-      </article>`).join("")}
-    </div>
-    <h3>Templates Reviewed</h3><div id="hist" class="history"></div>
-    <button id="final" class="primary" style="margin-top:15px">Use Final Selection</button>`;
-  renderHistory();
-  document.querySelectorAll("[data-prev]").forEach(b=>b.onclick=()=>preview(map.get(Number(b.dataset.prev))));
-  document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{choose(map.get(Number(b.dataset.pick)));document.querySelectorAll("[data-pick]").forEach(x=>x.textContent=Number(x.dataset.pick)===selected?"Selected":"Choose")});
-  $("final").onclick=()=>{const t=map.get(selected);save(t,true);alert(`Final template saved: ${t?.name||selected}`)}
-};
+const $=id=>document.getElementById(id);let current=null,selected=null,templateMap=new Map();
+const escapeHtml=value=>String(value??"").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+const safeUrl=value=>{try{const url=new URL(String(value));return["https:","http:"].includes(url.protocol)?url.href:""}catch{return""}};
+function historyKey(){return`smart1-designs:${($("name").value||"my-business").trim().toLowerCase()}`}
+function getHistory(){try{return JSON.parse(localStorage.getItem(historyKey())||"[]")}catch{return[]}}
+function saveHistory(template,final=false){if(!template)return;const items=getHistory();if(final)items.forEach(item=>item.final=false);const index=items.findIndex(item=>Number(item.id)===Number(template.id));const item={id:Number(template.id),name:template.name,thumb:template.thumb,previewUrl:template.previewUrl,viewedAt:new Date().toISOString(),final};if(index>=0)items[index]={...items[index],...item};else items.push(item);localStorage.setItem(historyKey(),JSON.stringify(items.slice(-12)));renderHistory()}
+function renderHistory(){const items=getHistory();$("history").innerHTML=items.length?items.map(item=>`<article class="hist ${item.final?"final":""}">${safeUrl(item.thumb)?`<img src="${escapeHtml(safeUrl(item.thumb))}" alt="">`:""}<div><strong>${escapeHtml(item.name)}</strong>${item.final?"Your favorite":"Previewed"}</div></article>`).join(""):'<small>Preview a design and it will appear here.</small>'}
+function showToast(message){$("toast").textContent=message;$("toast").classList.add("show");window.setTimeout(()=>$("toast").classList.remove("show"),2800)}
+function themeColors(industry=""){const value=industry.toLowerCase();if(/restaurant|food/.test(value))return{accent:"#c34f32",soft:"#f9eae5"};if(/legal|law/.test(value))return{accent:"#9b762c",soft:"#f6f0e2"};if(/home|hvac|service/.test(value))return{accent:"#087e9b",soft:"#e2f4f7"};return{accent:"#146fc8",soft:"#e7f2fb"}}
+function friendlyBlock(block){const labels={services:"Our Services",primary_cta:"Easy Next Steps",order_cta:"Order Your Favorites",featured_menu:"Customer Favorites",menu_preview:"Explore the Menu",specials:"Featured Offers",reviews:"Why Customers Choose Us",trust:"Built on Trust",about:"Our Story",location_hours:"Visit Us",service_area:"Proudly Serving Your Area",practice_areas:"How We Can Help",results:"Proven Experience",attorneys:"Meet the Team",financing:"Flexible Options",faq:"Helpful Answers",catering:"Catering Made Easy",emergency_cta:"Help When You Need It"};return labels[block]||String(block).replaceAll("_"," ").replace(/\b\w/g,letter=>letter.toUpperCase())}
+function renderSite(plan,template){const colors=themeColors(`${plan.industry} ${plan.subcategory}`),thumb=safeUrl(template?.thumb),nav=(plan.pages||[]).slice(0,4),sections=(plan.homepage_blocks||[]).filter(block=>!["hero","final_cta"].includes(block)).slice(0,3);$("site-preview").style.setProperty("--accent",colors.accent);$("site-preview").style.setProperty("--accent-soft",colors.soft);$("site-preview").innerHTML=`<div class="browser-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><div class="address">${escapeHtml(String(plan.business_name).toLowerCase().replace(/[^a-z0-9]+/g,""))}.com</div></div><div class="site-nav"><div class="site-logo">${escapeHtml(plan.business_name)}</div><nav class="nav-links">${nav.map(page=>`<a>${escapeHtml(page)}</a>`).join("")}<button class="nav-cta">${escapeHtml(plan.primary_cta)}</button></nav></div><div class="site-hero"><div class="hero-copy"><div class="hero-kicker">Welcome to ${escapeHtml(plan.business_name)}</div><h3>${escapeHtml(plan.hero_headline)}</h3><p>${escapeHtml(plan.hero_subheadline)}</p><button class="hero-cta">${escapeHtml(plan.primary_cta)} →</button></div><div class="hero-visual ${thumb?"has-image":""}" ${thumb?`style="background-image:linear-gradient(#1029431f,#1029431f),url('${escapeHtml(thumb)}')"`:""}></div></div><div class="mock-sections">${sections.map((block,index)=>`<div class="mock-card"><div class="mock-icon">${index+1}</div><strong>${escapeHtml(friendlyBlock(block))}</strong><span>Everything your customers need, presented clearly and beautifully.</span></div>`).join("")}</div><div class="site-strip"><strong>Ready to work with ${escapeHtml(plan.business_name)}?</strong><button>${escapeHtml(plan.primary_cta)}</button></div>`}
+function renderThemes(templates,recommendedId){$("theme-grid").innerHTML=templates.slice(0,6).map((template,index)=>{const id=Number(template.id),isSelected=id===selected,thumb=safeUrl(template.thumb);return`<article class="theme-card ${isSelected?"selected":""}" data-theme="${id}">${id===recommendedId?'<span class="badge">★ Best match</span>':""}<div class="theme-img">${thumb?`<img src="${escapeHtml(thumb)}" alt="${escapeHtml(template.name)} design">`:`<div class="theme-placeholder" style="background:linear-gradient(135deg,hsl(${205+index*18} 62% 62%),hsl(${215+index*16} 55% 37%))"></div>`}</div><div class="theme-body"><div class="theme-title"><strong>${escapeHtml(template.name)}</strong>${isSelected?'<span class="selected-label">✓ Chosen</span>':""}</div><div class="theme-actions"><button class="preview-btn" data-preview="${id}">See full preview</button><button class="choose-btn" data-choose="${id}">${isSelected?"Chosen":"Choose this look"}</button></div></div></article>`}).join("");document.querySelectorAll("[data-preview]").forEach(button=>button.onclick=()=>previewTemplate(templateMap.get(Number(button.dataset.preview))));document.querySelectorAll("[data-choose]").forEach(button=>button.onclick=()=>chooseTemplate(templateMap.get(Number(button.dataset.choose))))}
+function previewTemplate(template){if(!template)return;saveHistory(template);const previewUrl=safeUrl(template.previewUrl);if(!previewUrl){chooseTemplate(template);showToast("This design is now shown in your website preview.");return}$("modal-title").textContent=template.name;$("frame").src=previewUrl;$("modal").classList.remove("hidden")}
+function chooseTemplate(template){if(!template||!current)return;selected=Number(template.id);saveHistory(template,true);renderSite(current.plan,template);renderThemes(current.templates,Number(current.plan.selected_template_id));$("final-copy").textContent=`${template.name} is selected. Save it as the direction for your new website.`;$("site-preview").scrollIntoView({behavior:"smooth",block:"start"})}
+$("close").onclick=()=>{$("modal").classList.add("hidden");$("frame").src="about:blank"};$("modal").onclick=event=>{if(event.target===$("modal"))$("close").click()};$("back").onclick=()=>{$("experience").style.display="none";$("start").style.display="block";window.scrollTo({top:0,behavior:"smooth"})};$("final").onclick=()=>{const template=templateMap.get(selected);if(!template)return;saveHistory(template,true);showToast(`Great choice — ${template.name} is saved as your favorite.`)};
+$("business-form").onsubmit=async event=>{event.preventDefault();$("loading").classList.add("show");const body={businessName:$("name").value.trim(),websiteUrl:$("url").value.trim(),businessType:$("type").value.trim(),city:$("city").value.trim(),primaryGoal:$("goal").value,description:$("desc").value.trim()};try{const response=await fetch("/api/site-plan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),data=await response.json();if(!response.ok)throw new Error(data.error||"We couldn't create your preview just yet.");current=data;templateMap=new Map((data.templates||[]).map(template=>[Number(template.id),template]));selected=Number(data.plan.selected_template_id);const recommended=templateMap.get(selected)||data.templates?.[0]||null;if(recommended)selected=Number(recommended.id);$("result-title").textContent=`${data.plan.business_name}, meet your new website.`;renderSite(data.plan,recommended);renderThemes(data.templates||[],selected);renderHistory();$("start").style.display="none";$("experience").style.display="block";window.scrollTo({top:0,behavior:"smooth"})}catch(error){showToast(error.message||"Something went wrong. Please try again.")}finally{$("loading").classList.remove("show")}};
