@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart 1 Sites Creator</title>
+<style>
+:root{--b:#1689e7;--bg:#f5f7fb;--ink:#172033;--m:#667085;--l:#e5eaf0;--g:#178f5f}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1180px;margin:auto;padding:28px 18px 60px}.brand{font-weight:800;margin-bottom:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.card{background:#fff;border:1px solid var(--l);border-radius:18px;padding:24px}h1{font-size:38px;margin:4px 0 10px}.lead{color:var(--m);line-height:1.55}
+label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}input,select,textarea{width:100%;padding:12px;border:1px solid #cfd6df;border-radius:10px;font-size:15px}
+textarea{min-height:90px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}button{border:0;border-radius:10px;padding:12px 15px;font-weight:800;cursor:pointer}
+.primary{background:var(--b);color:#fff}.secondary{background:#eef2f6}.templates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.template{border:1px solid var(--l);border-radius:12px;overflow:hidden}.template.selected{outline:2px solid var(--b)}.template img{width:100%;aspect-ratio:16/10;object-fit:cover;background:#eee}
+.tbody{padding:9px}.tiny{font-size:11px;color:var(--m)}.actions{display:flex;gap:7px;margin-top:8px}.actions button{padding:8px 9px;font-size:11px}
+.history{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.hist{border:1px solid var(--l);border-radius:9px;overflow:hidden}.hist.final{outline:2px solid var(--g)}
+.hist img{width:100%;aspect-ratio:16/10;object-fit:cover}.hist div{padding:6px;font-size:10px}.hidden{display:none}.modal{position:fixed;inset:0;background:#0009;padding:20px;z-index:10;display:grid;place-items:center}
+.modalbox{width:min(1200px,96vw);height:min(850px,92vh);background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}.modalhead{padding:10px;display:flex;justify-content:space-between}.modal iframe{width:100%;border:0;flex:1}
+@media(max-width:800px){.grid,.two,.templates{grid-template-columns:1fr}.history{grid-template-columns:1fr 1fr}h1{font-size:32px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Smart 1 Sites · AI Creator</div>
+  <div class="grid">
+    <section class="card">
+      <h1>Tell us about your business.</h1>
+      <p class="lead">We’ll use your live Smart 1 / Simvoly template catalog and AI to recommend the best site.</p>
+      <form id="f">
+        <div class="two"><div><label>Business name</label><input id="name" required></div><div><label>Website URL</label><input id="url" type="url"></div></div>
+        <div class="two"><div><label>Business type</label><input id="type" required placeholder="Wing restaurant"></div><div><label>City / market</label><input id="city"></div></div>
+        <label>Primary goal</label><select id="goal"><option value="online_order">Order Online</option><option value="call">Call</option><option value="appointment">Book Appointment</option><option value="quote">Request Quote</option><option value="reservation">Reservation</option><option value="lead">Contact / Lead</option></select>
+        <label>Tell us more</label><textarea id="desc"></textarea>
+        <button class="primary" style="margin-top:16px">Create My Website Plan</button>
+      </form>
+    </section>
+    <section class="card"><div id="out"><p class="lead">Your recommended templates will appear here.</p></div></section>
+  </div>
+</div>
+<div id="modal" class="modal hidden"><div class="modalbox"><div class="modalhead"><strong id="mt">Template Preview</strong><button id="close" class="secondary">Close</button></div><iframe id="frame"></iframe></div></div>
+<script src="/app.js"></script>
+</body></html>

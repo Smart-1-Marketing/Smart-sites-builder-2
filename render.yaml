@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: smart-1-sites-creator
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - fromGroup: "simvy keys"
