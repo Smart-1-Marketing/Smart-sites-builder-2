@@ -1,10 +1,176 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="See a better website for your business in minutes with Smart 1 Sites."><title>Smart 1 Sites — See Your New Website</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/styles.css"></head>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="See a better website for your business in minutes with Smart 1 Sites.">
+<title>Smart 1 Sites — See Your New Website</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
 <body>
-<header class="topbar"><div class="shell topbar-inner"><a class="brand" href="https://smart1sites.com/" target="_blank" rel="noopener"><span class="brand-mark">S1</span><span>Smart 1 Sites</span></a><span class="top-note">A beautiful website is minutes away</span></div></header>
+<header class="topbar">
+  <div class="shell topbar-inner">
+    <a class="brand" href="https://smart1sites.com/" target="_blank" rel="noopener">
+      <span class="brand-mark">S1</span><span>Smart 1 Sites</span>
+    </a>
+    <span class="top-note">A beautiful website is minutes away</span>
+  </div>
+</header>
+
 <main>
-<section id="screen1" class="screen active"><div class="shell"><div class="steps"><div class="step active"><i>1</i><span>Your website</span></div><div class="line"></div><div class="step"><i>2</i><span>New designs</span></div><div class="line"></div><div class="step"><i>3</i><span>Your favorite</span></div></div><div class="intro"><div class="pill">✦ Smart 1 AI Website Makeover</div><h1>Show us your website.<br>We’ll show you what it could become.</h1><p>We’ll read your public website, reuse your real content and photography, then build several new Smart 1 design directions around your business.</p></div><section class="start-card"><form id="websiteForm"><label for="websiteUrl">Your current website <strong>Required</strong></label><div class="url-row"><input id="websiteUrl" name="websiteUrl" required inputmode="url" autocomplete="url" placeholder="https://yourbusiness.com"><button type="submit">Create My New Website <span>→</span></button></div><div class="optional-row"><div><label for="primaryGoal">What should your new site help customers do?</label><select id="primaryGoal"><option value="lead">Contact my business</option><option value="call">Call now</option><option value="appointment">Book an appointment</option><option value="quote">Request a quote</option><option value="online_order">Order online</option><option value="reservation">Make a reservation</option></select></div><div><label for="businessType">Business type <span>optional</span></label><input id="businessType" placeholder="e.g. RV resort, restaurant, HVAC company"></div></div><p class="permission-note">Use a website you own or are authorized to redesign. Nothing is changed or published during the preview.</p></form></section><div class="what-we-use"><span>We look for:</span><div>✓ Your logo & brand</div><div>✓ Real photos</div><div>✓ Services & amenities</div><div>✓ Calls to action</div><div>✓ Reviews, FAQs & key pages</div></div></div></section>
-<section id="screen2" class="screen"><div class="shell"><div class="steps"><div class="step done"><i>✓</i><span>Your website</span></div><div class="line"></div><div class="step active"><i>2</i><span>New designs</span></div><div class="line"></div><div class="step"><i>3</i><span>Your favorite</span></div></div><div class="results-heading"><button id="editWebsite" class="text-button">← Change website</button><h1 id="designHeading">Here are your new website directions.</h1><p>Same business. Same real content. Four different ways to present it beautifully.</p></div><div id="designChoices" class="design-choices" aria-label="Website design choices"></div><div class="preview-toolbar"><div><span class="eyebrow">LIVE PREVIEW</span><strong id="activeDesignName">Recommended design</strong></div><div class="toolbar-actions"><button id="openOriginal" class="ghost-button">View Current Site</button><button id="chooseDesignTop" class="choose-button">Choose This Design →</button></div></div><div class="browser-frame"><div class="browser-chrome"><span></span><span></span><span></span><div id="previewAddress" class="address"></div></div><div id="websitePreview" class="website-preview"></div></div><div class="bottom-choice"><div><strong>Love this direction?</strong><span>You can still change the design before you finish.</span></div><button id="chooseDesignBottom" class="choose-button">Choose This Design →</button></div></div></section>
-<section id="screen3" class="screen"><div class="shell narrow"><div class="steps"><div class="step done"><i>✓</i><span>Your website</span></div><div class="line"></div><div class="step done"><i>✓</i><span>New designs</span></div><div class="line"></div><div class="step active"><i>3</i><span>Your favorite</span></div></div><div class="finish-card"><div class="finish-check">✓</div><span class="eyebrow">YOUR DESIGN IS READY</span><h1 id="finishTitle">Great choice.</h1><p id="finishCopy">We saved the design direction for your new website.</p><div id="favoriteMini" class="favorite-mini"></div><label for="leadEmail">Where should we send your design? <span>optional</span></label><input id="leadEmail" type="email" autocomplete="email" placeholder="you@yourbusiness.com"><button id="finishButton" class="finish-button">Continue With My Website →</button><button id="backToDesigns" class="text-button">← Look at the other designs</button></div></div></section>
+  <section id="screen1" class="screen active">
+    <div class="shell">
+      <div class="steps">
+        <div class="step active"><i>1</i><span>Your business</span></div><div class="line"></div>
+        <div class="step"><i>2</i><span>New designs</span></div><div class="line"></div>
+        <div class="step"><i>3</i><span>Create account</span></div>
+      </div>
+
+      <div class="intro">
+        <div class="pill">✦ Smart 1 AI Website Makeover</div>
+        <h1>Show us your business.<br>We’ll show you what it could become.</h1>
+        <p>We’ll read your public website, keep your company’s brand colors and real content, then create several stronger Smart 1 design directions.</p>
+      </div>
+
+      <section class="start-card">
+        <form id="websiteForm">
+          <div class="required-grid">
+            <div>
+              <label for="companyName">Company name <strong>Required</strong></label>
+              <input id="companyName" name="companyName" required autocomplete="organization" placeholder="e.g. The Farm RV Resort">
+            </div>
+            <div>
+              <label for="websiteUrl">Current website <strong>Required</strong></label>
+              <input id="websiteUrl" name="websiteUrl" required inputmode="url" autocomplete="url" placeholder="https://yourbusiness.com">
+            </div>
+          </div>
+
+          <div class="optional-row">
+            <div>
+              <label for="primaryGoal">What should your new site help customers do?</label>
+              <select id="primaryGoal">
+                <option value="lead">Contact my business</option>
+                <option value="call">Call now</option>
+                <option value="appointment">Book an appointment</option>
+                <option value="quote">Request a quote</option>
+                <option value="online_order">Order online</option>
+                <option value="reservation">Make a reservation</option>
+              </select>
+            </div>
+            <div>
+              <label for="businessType">Business type <span>optional</span></label>
+              <input id="businessType" placeholder="e.g. RV resort, restaurant, HVAC company">
+            </div>
+          </div>
+
+          <button class="main-submit" type="submit">Create My New Website <span>→</span></button>
+          <p class="permission-note">Use a website you own or are authorized to redesign. Nothing is changed or published during the preview.</p>
+        </form>
+      </section>
+
+      <div class="what-we-use">
+        <span>We keep and improve:</span>
+        <div>✓ Your brand colors</div><div>✓ Your logo</div><div>✓ Your best real photos</div><div>✓ Services & amenities</div><div>✓ Calls to action</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen2" class="screen">
+    <div class="shell">
+      <div class="steps">
+        <div class="step done"><i>✓</i><span>Your business</span></div><div class="line"></div>
+        <div class="step active"><i>2</i><span>New designs</span></div><div class="line"></div>
+        <div class="step"><i>3</i><span>Create account</span></div>
+      </div>
+
+      <div class="results-heading">
+        <button id="editWebsite" class="text-button">← Update my details</button>
+        <h1 id="designHeading">Choose your new website look.</h1>
+        <p>These are real Smart 1 themes. Choose a theme structure; your company colors and content stay consistent in the personalized preview below.</p>
+        <div id="brandSwatches" class="brand-swatches" aria-label="Detected brand colors"></div>
+      </div>
+
+      <div id="designChoices" class="design-choices" aria-label="Website design choices"></div>
+
+      <div class="preview-toolbar">
+        <div>
+          <span class="eyebrow">LIVE PREVIEW</span>
+          <strong id="activeDesignName">Recommended design</strong>
+        </div>
+        <div class="toolbar-actions">
+          <button id="openOriginal" class="ghost-button">View Current Site</button>
+          <button id="openTheme" class="ghost-button">View Original Theme</button>
+          <button id="chooseDesignTop" class="choose-button">Choose This Theme →</button>
+        </div>
+      </div>
+
+      <div class="browser-frame">
+        <div class="browser-chrome"><span></span><span></span><span></span><div id="previewAddress" class="address"></div></div>
+        <div id="websitePreview" class="website-preview"></div>
+      </div>
+
+      <div class="bottom-choice">
+        <div><strong>Love this direction?</strong><span>Your brand colors will stay with the site when it is created.</span></div>
+        <button id="chooseDesignBottom" class="choose-button">Choose This Theme →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen3" class="screen">
+    <div class="shell narrow">
+      <div class="steps">
+        <div class="step done"><i>✓</i><span>Your business</span></div><div class="line"></div>
+        <div class="step done"><i>✓</i><span>New designs</span></div><div class="line"></div>
+        <div class="step active"><i>3</i><span>Create account</span></div>
+      </div>
+
+      <div class="finish-card">
+        <div class="finish-check">✓</div>
+        <span class="eyebrow">YOUR DESIGN IS READY</span>
+        <h1 id="finishTitle">Great choice.</h1>
+        <p id="finishCopy">Create your Smart 1 Sites account and we’ll build your new site from the design you selected.</p>
+        <div id="favoriteMini" class="favorite-mini"></div>
+
+        <div class="signup-panel">
+          <div class="signup-copy">
+            <h2>Create your account</h2>
+            <p>Start with your selected design. Your Smart 1 Site includes a 14-day free trial.</p>
+          </div>
+          <form id="signupForm">
+            <label for="fullName">Your name</label>
+            <input id="fullName" required autocomplete="name" placeholder="Your name">
+            <label for="accountEmail">Email</label>
+            <input id="accountEmail" type="email" required autocomplete="email" placeholder="you@yourbusiness.com">
+            <label for="accountPassword">Password</label>
+            <input id="accountPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
+            <label class="terms-check">
+              <input id="agreeTerms" type="checkbox" required>
+              <span>I agree to the <a href="https://smart1sites.com/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> and <a href="https://smart1sites.com/terms-and-conditions" target="_blank" rel="noopener">Terms & Conditions</a>.</span>
+            </label>
+            <button id="finishButton" class="finish-button" type="submit">Create My Free Account & Website →</button>
+          </form>
+          <p class="login-note">Already have a Smart 1 Sites account? <a href="https://smart1sites.com/login">Sign in</a></p>
+        </div>
+        <button id="backToDesigns" class="text-button">← Look at the other designs</button>
+      </div>
+    </div>
+  </section>
 </main>
-<div id="loading" class="loading" role="status" aria-live="polite"><div class="loading-card"><div class="scan-icon"><div></div></div><h2 id="loadingTitle">Reading your current website…</h2><p id="loadingCopy">Finding your content, photos and calls to action.</p><div class="progress"><span id="progressBar"></span></div><div class="scan-steps"><span id="scan1" class="active">Website</span><span id="scan2">Content</span><span id="scan3">Designs</span><span id="scan4">Preview</span></div></div></div><div id="toast" class="toast"></div><script src="/app.js"></script></body></html>
+
+<div id="loading" class="loading" role="status" aria-live="polite">
+  <div class="loading-card">
+    <div class="scan-icon"><div></div></div>
+    <h2 id="loadingTitle">Reading your current website…</h2>
+    <p id="loadingCopy">Finding your content, photos, calls to action and brand colors.</p>
+    <div class="progress"><span id="progressBar"></span></div>
+    <div class="scan-steps"><span class="active">Website</span><span>Brand</span><span>Photos</span><span>Designs</span></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>
