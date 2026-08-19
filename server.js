@@ -1,111 +1,20 @@
 import "dotenv/config";
 import express from "express";
 import OpenAI from "openai";
-import {findRecipe} from "./recipes.js";
+import crypto from "node:crypto";
+import {crawlWebsite} from "./crawler.js";
+import {buildPlan} from "./ai-planner.js";
 import {getSimvolyConfig,listWebsiteTemplates,createWebsite} from "./simvoly-client.js";
 import {scoreTemplates} from "./template-scorer.js";
-
-const app = express();
-app.use(express.json({limit:"1mb"}));
-app.use(express.static("public"));
-
-const ai = process.env.OPENAI_API_KEY ? new OpenAI({apiKey:process.env.OPENAI_API_KEY}) : null;
-
-const schema = {
-  type:"object", additionalProperties:false,
-  properties:{
-    business_name:{type:"string"}, industry:{type:"string"}, subcategory:{type:"string"},
-    primary_goal:{type:"string"}, navigation:{type:"string"},
-    pages:{type:"array",items:{type:"string"}},
-    homepage_blocks:{type:"array",items:{type:"string"}},
-    primary_cta:{type:"string"}, hero_headline:{type:"string"}, hero_subheadline:{type:"string"},
-    rationale:{type:"string"},
-    selected_template_id:{type:"integer"},
-    alternative_template_ids:{type:"array",items:{type:"integer"},maxItems:4}
-  },
-  required:["business_name","industry","subcategory","primary_goal","navigation","pages","homepage_blocks",
-            "primary_cta","hero_headline","hero_subheadline","rationale","selected_template_id","alternative_template_ids"]
-};
-
-function fallback(input,recipe,ranked){
-  const goal=input.primaryGoal||"lead";
-  const cta={call:"Call Now",appointment:"Book an Appointment",online_order:"Order Online",reservation:"Make a Reservation",
-             quote:"Request a Quote",visit:"Get Directions",inventory:"View Inventory",consultation:"Get a Free Consultation",lead:"Contact Us"}[goal]||"Get Started";
-  return {
-    business_name:input.businessName||"Your Business",
-    industry:recipe.industry, subcategory:recipe.subcategory, primary_goal:goal, navigation:"top",
-    pages:recipe.pages, homepage_blocks:recipe.homepageBlocks, primary_cta:cta,
-    hero_headline:input.city ? `${input.businessName||"Your Business"} in ${input.city}` : (input.businessName||"Your Business"),
-    hero_subheadline:input.description||`Welcome to ${input.businessName||"our business"}.`,
-    rationale:"Matched against the live Smart 1 / Simvoly template catalog.",
-    selected_template_id:ranked[0]?.id||0,
-    alternative_template_ids:ranked.slice(1,5).map(t=>t.id)
-  };
-}
-
+const app=express(); app.disable("x-powered-by"); app.use(express.json({limit:"600kb"})); app.use(express.static("public",{maxAge:process.env.NODE_ENV==="production"?"1h":0}));
+const openai=process.env.OPENAI_API_KEY?new OpenAI({apiKey:process.env.OPENAI_API_KEY}):null,model=process.env.OPENAI_MODEL||"gpt-5.6",cache=new Map();
+const PRESETS=[{key:"modern-split",label:"Modern & Clear",description:"Clean, confident and conversion-focused.",layout:"split",tone:"blue"},{key:"immersive",label:"Immersive",description:"Big photography with a strong sense of place.",layout:"immersive",tone:"forest"},{key:"warm-editorial",label:"Warm & Welcoming",description:"Story-led, friendly and image-rich.",layout:"editorial",tone:"warm"},{key:"bold-cards",label:"Bold & Active",description:"High-energy sections that spotlight what you offer.",layout:"cards",tone:"sunset"},{key:"premium",label:"Premium",description:"Refined typography and an upscale presentation.",layout:"premium",tone:"charcoal"},{key:"classic-local",label:"Classic Local",description:"Familiar navigation with strong calls to action.",layout:"classic",tone:"navy"}];
+function designs(ranked,selectedId){const list=[...ranked],i=list.findIndex(t=>t.id===selectedId); if(i>0){const[c]=list.splice(i,1);list.unshift(c)} return PRESETS.slice(0,4).map((p,index)=>{const t=list[index]||null; return{key:`${p.key}-${t?.id||`preview-${index+1}`}`,label:p.label,description:p.description,layout:p.layout,tone:p.tone,recommended:index===0,templateId:t?.id||null,templateThumb:t?.thumb||"",templatePreviewUrl:t?.previewUrl||""}})}
+const cacheKey=input=>crypto.createHash("sha256").update(`${input.websiteUrl.trim().toLowerCase()}|${input.primaryGoal||""}|${input.businessType||""}`).digest("hex");
+const sanitize=body=>({websiteUrl:String(body?.websiteUrl||"").trim(),primaryGoal:["lead","call","appointment","quote","online_order","reservation"].includes(body?.primaryGoal)?body.primaryGoal:"lead",businessType:String(body?.businessType||"").trim().slice(0,120),city:String(body?.city||"").trim().slice(0,120)});
 app.get("/health",(req,res)=>res.status(200).type("text/plain").send("ok"));
-
-app.get("/api/health",(req,res)=>{
-  const s=getSimvolyConfig();
-  res.json({ok:true,aiConfigured:!!ai,simvolyConfigured:!!(s.domain&&s.clientKey),simvolyDomain:s.domain||null});
-});
-
-app.get("/api/templates",async(req,res)=>{
-  try {
-    const templates=await listWebsiteTemplates({visibleOnly:req.query.all!=="1"});
-    res.json({count:templates.length,templates});
-  } catch(e) {
-    res.status(e.code==="SIMVOLY_NOT_CONFIGURED"?503:502).json({error:e.message,details:e.details||null});
-  }
-});
-
-app.post("/api/site-plan",async(req,res)=>{
-  const input=req.body||{};
-  const recipe=findRecipe(input);
-  let templates=[];
-  try { templates=await listWebsiteTemplates({visibleOnly:true}); } catch(e){ console.warn(e.message); }
-  const ranked=scoreTemplates(templates,input);
-  const candidates=ranked.slice(0,12);
-
-  if(!ai){
-    const plan=fallback(input,recipe,ranked);
-    return res.json({mode:"rules",plan,templates:candidates,
-      selectedTemplate:templates.find(t=>t.id===plan.selected_template_id)||null});
-  }
-
-  try{
-    const response=await ai.responses.create({
-      model:process.env.OPENAI_MODEL||"gpt-5.6",
-      instructions:`You are the Smart 1 AI Website Planner.
-Choose ONLY from the live template candidates below.
-selected_template_id must exactly match one candidate id.
-Prefer relevant Smart 1 custom templates when comparable.
-Build for mobile conversion. Do not invent business claims.
-Recipe:
-${JSON.stringify(recipe,null,2)}
-Live template candidates:
-${JSON.stringify(candidates,null,2)}`,
-      input:JSON.stringify(input,null,2),
-      text:{format:{type:"json_schema",name:"smart1_site_plan",strict:true,schema}}
-    });
-    const plan=JSON.parse(response.output_text);
-    const allowed=new Set(candidates.map(t=>t.id));
-    if(!allowed.has(plan.selected_template_id)) plan.selected_template_id=candidates[0]?.id||0;
-    plan.alternative_template_ids=(plan.alternative_template_ids||[]).filter(id=>allowed.has(id)&&id!==plan.selected_template_id).slice(0,4);
-    res.json({mode:"ai",plan,templates:candidates,
-      selectedTemplate:templates.find(t=>t.id===plan.selected_template_id)||null});
-  }catch(e){
-    console.error(e);
-    const plan=fallback(input,recipe,ranked);
-    res.json({mode:"rules-fallback",plan,templates:candidates,
-      selectedTemplate:templates.find(t=>t.id===plan.selected_template_id)||null});
-  }
-});
-
-app.post("/api/simvoly/create-site",async(req,res)=>{
-  try { res.json(await createWebsite(req.body||{})); }
-  catch(e){ res.status(e.code==="SIMVOLY_NOT_CONFIGURED"?503:502).json({error:e.message,details:e.details||null}); }
-});
-
-const port = Number(process.env.PORT) || 3000;
-app.listen(port,"0.0.0.0",()=>console.log(`Smart 1 Sites Creator listening on 0.0.0.0:${port}`));
+app.get("/api/health",(req,res)=>{const s=getSimvolyConfig();res.json({ok:true,aiConfigured:!!openai,templatesConfigured:!!(s.domain&&s.clientKey)})});
+app.post("/api/build-preview",async(req,res)=>{const input=sanitize(req.body); if(!input.websiteUrl)return res.status(400).json({error:"Enter your current website address."}); const key=cacheKey(input),hit=cache.get(key); if(hit&&Date.now()-hit.at<600000)return res.json(hit.value); try{const crawl=await crawlWebsite(input.websiteUrl); let templates=[]; try{templates=await listWebsiteTemplates({visibleOnly:true})}catch(e){console.warn("Live template catalog unavailable:",e.message)} const ranked=scoreTemplates(templates,{...input,title:crawl.title,siteName:crawl.siteName,metaDescription:crawl.metaDescription,headings:crawl.headings}),{plan,mode}=await buildPlan({client:openai,model,crawl,input,templates:ranked}),opts=designs(ranked,plan.selected_template_id),value={business:{name:plan.business_name,sourceUrl:crawl.finalUrl,pagesScanned:crawl.pages.length},content:{...plan,logo:crawl.logo},designs:opts,recommendedDesignKey:opts[0].key,continueUrl:process.env.SMART1_START_URL||"https://smart1sites.com/website-wizard",mode}; cache.set(key,{at:Date.now(),value}); res.json(value)}catch(e){console.error("Preview build failed:",e);res.status(422).json({error:e.message||"We couldn't read that website. Check the address and try again."})}});
+app.post("/api/save-selection",async(req,res)=>{const payload={websiteUrl:String(req.body?.websiteUrl||"").slice(0,500),businessName:String(req.body?.businessName||"").slice(0,120),designKey:String(req.body?.designKey||"").slice(0,120),templateId:req.body?.templateId?Number(req.body.templateId):null,email:String(req.body?.email||"").slice(0,180),savedAt:new Date().toISOString()}; if(process.env.SMART1_LEAD_WEBHOOK_URL){try{await fetch(process.env.SMART1_LEAD_WEBHOOK_URL,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload),signal:AbortSignal.timeout(8000)})}catch(e){console.warn("Selection webhook failed:",e.message)}} res.json({ok:true,continueUrl:process.env.SMART1_START_URL||"https://smart1sites.com/website-wizard"})});
+app.post("/api/simvoly/create-site",async(req,res)=>{try{res.json(await createWebsite(req.body||{}))}catch(e){res.status(e.code==="SIMVOLY_NOT_CONFIGURED"?503:502).json({error:e.message})}});
+const port=Number(process.env.PORT)||10000,server=app.listen(port,"0.0.0.0",()=>console.log(`Smart 1 Sites Creator listening on 0.0.0.0:${port}`)); server.keepAliveTimeout=120000; server.headersTimeout=120000;
